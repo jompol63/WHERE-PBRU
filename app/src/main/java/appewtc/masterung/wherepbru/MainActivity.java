@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         myManage = new MyManage(this);
 
 
+
         //myManage.addRoom("build", "room", "lat", "lng", "icon");
 
         deleteAllSQLite();
