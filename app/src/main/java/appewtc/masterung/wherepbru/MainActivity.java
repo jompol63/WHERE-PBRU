@@ -1,10 +1,18 @@
 package appewtc.masterung.wherepbru;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import android.preference.DialogPreference;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -18,10 +26,16 @@ public class MainActivity extends AppCompatActivity {
     private MyManage myManage;
     private String urlJSON = "http://swiftcodingthai.com/pbru/get_room.php";
 
+    private EditText editText;
+    private String roomString;
+    private String[] resultStrings;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        editText = (EditText) findViewById(R.id.editText);
 
         myManage = new MyManage(this);
 
@@ -34,6 +48,73 @@ public class MainActivity extends AppCompatActivity {
         synRoom.execute();
 
     }   // Main Method
+
+    public void clickSearch(View view) {
+
+        roomString = editText.getText().toString().trim();
+
+        if (roomString.equals("")) {
+            Toast.makeText(this, "กรุณากรอกหมายเลขห้อง", Toast.LENGTH_SHORT).show();
+        } else {
+            searchRoom();
+        }
+
+    }//ClickS
+
+    private void searchRoom() {
+        try {
+
+            SQLiteDatabase sqLiteDatabase = openOrCreateDatabase(MyOpenHelper.database_name,
+                    MODE_PRIVATE, null);
+            Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM roomTABLE WHERE Room =" + "'" + roomString + "'", null);
+            cursor.moveToFirst();
+
+            resultStrings = new String[cursor.getColumnCount()];
+            for (int i=0;i<cursor.getColumnCount();i++) {
+                resultStrings[i] = cursor.getString(i);
+            }//for
+
+            myAlert();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "ไม่มี " + roomString + " ในฐานข้อมูล", Toast.LENGTH_SHORT).show();
+
+        }
+    }//searchRoom
+
+    private void myAlert() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setIcon(R.drawable.build1);
+        builder.setCancelable(false);
+        builder.setTitle("ห้อง " + roomString);
+        builder.setMessage("อยู่ที่ อาคาร" + resultStrings[1]);
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.setPositiveButton("Go", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                intent.putExtra("Result", resultStrings);
+                startActivity(intent);
+
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
+
+    }//myAlesrt
+
+    public void clickListBuild(View view) {
+
+    }//ClickB
+    public void clickAdmin(View view) {
+
+    }
 
     public class SynRoom extends AsyncTask<Void, Void, String> {
 
